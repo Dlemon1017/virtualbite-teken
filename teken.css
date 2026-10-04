@@ -1,0 +1,20 @@
+/* Partnerpagina: aanvullend op gedeeld/stijl.css (zelfde kleuren, licht/donker volgt het apparaat). */
+.balk { display: flex; justify-content: center; padding: calc(14px + env(safe-area-inset-top)) 16px 10px;
+  border-bottom: 1px solid var(--lijn); background: var(--kaart); }
+.wordmark { display: block; height: 28px; width: auto; }
+@media (prefers-color-scheme: dark) { .wordmark { filter: invert(1) hue-rotate(180deg); } }
+#inhoud { max-width: 640px; }
+.merk-blok { display: flex; align-items: center; gap: 14px; margin: 8px 0 18px; }
+.merk-blok img { width: 64px; height: 64px; object-fit: contain; border-radius: 12px; background: #fff; padding: 4px; }
+.merk-blok .sub { margin: 0; }
+.checklist { margin: 0; padding: 0; list-style: none; }
+.checklist li { padding: 8px 0 8px 30px; border-top: 1px solid var(--lijn); position: relative; }
+.checklist li:first-child { border-top: 0; }
+.checklist li::before { content: "✓"; position: absolute; left: 4px; color: var(--groen); font-weight: 700; }
+.voortgang { margin: 4px 0 14px; }
+.voortgang .balkje { height: 6px; border-radius: 3px; background: var(--lijn); overflow: hidden; margin-top: 6px; }
+.voortgang .balkje span { display: block; height: 100%; background: var(--accent); transition: width .2s; }
+.nav-knoppen { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+.nav-knoppen .alleen { grid-column: 1 / -1; }
+.contact { color: var(--zacht); font-size: 14px; margin-top: 22px; text-align: center; }
+.contact a { color: var(--tekst); }
