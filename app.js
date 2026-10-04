@@ -118,8 +118,7 @@
     'telefoonnummers (zaak en mobiel contactpersoon)',
     'bezorg- en afhaaltijden per dag',
     'hoe de zaak bestellingen ontvangt (koppeling: T-Connect, terminal, POS-API of anders)',
-    'gewenst bezorggebied (postcodes)',
-    'eventuele andere virtuele merken die nu al vanuit de zaak draaien'
+    'gewenst bezorggebied (postcodes)'
   ];
 
   function toonStart() {
@@ -148,7 +147,8 @@
     var laatste = n === FORMULIER_STAPPEN.length - 1;
     zet('<div class="voortgang"><div class="klein">Stap ' + (n + 1) + ' van ' + FORMULIER_STAPPEN.length + '</div>' +
       '<div class="balkje"><span></span></div></div>' +
-      '<section class="kaart"><h2>' + esc(st.titel) + '</h2>' + f.stapVelden(st, partner, false) + '</section>' +
+      '<section class="kaart"><h2>' + esc(st.titel) + '</h2>' + f.stapVelden(st, partner, false) +
+      (st.titel === 'Bezorggebied' ? '<div class="klein" id="afstandInfo" hidden></div>' : '') + '</section>' +
       '<div class="nav-knoppen">' + (n > 0 ? '<button class="knop licht" data-actie="vorige">Vorige</button>' : '') +
       '<button class="knop' + (n > 0 ? '' : ' alleen') + '" data-actie="volgende">' + (laatste ? 'Naar overzicht' : 'Volgende') +
       '</button></div>' + contactHtml());
@@ -193,6 +193,12 @@
     else if (actie === 'vorige') { f.slaWachtendOp(); toonStap(stap - 1); }
     else if (actie === 'volgende') {
       f.slaWachtendOp();
+      var fouten = f.controleerStap(FORMULIER_STAPPEN[stap]); // pas verder als deze stap klopt
+      if (Object.keys(fouten).length) {
+        f.toonVeldFouten(fouten);
+        toon(f.samenvattingFouten(fouten), true);
+        return;
+      }
       if (stap === FORMULIER_STAPPEN.length - 1) toonOverzicht(); else toonStap(stap + 1);
     } else if (actie === 'naar-stap') toonStap(Number(knop.getAttribute('data-stap')));
     else if (actie === 'versturen') versturen(knop);
