@@ -25,7 +25,7 @@
 .lees p { margin: 0 0 10px; }
 .lees .lees-midden { text-align: center; }
 .lees .lees-hangend { padding-left: 1.8em; text-indent: -1.8em; }
-.lees .lees-tab { display: inline-block; width: 1.8em; text-indent: 0; }
+.lees .lees-tab { display: inline-block; width: 1em; text-indent: 0; }
 .lees ul { margin: 4px 0 12px; padding-left: 1.3em; }
 .lees li { margin-bottom: 4px; }
 .lees-tabel { width: 100%; border-collapse: collapse; margin: 6px 0 14px; font-size: 14px; }
@@ -38,3 +38,5 @@
 .vink-regel span { font-weight: 500; }
 .uitleg-tb { margin: -2px 0 8px 32px; }
 .vink-regel { align-items: flex-start; }
+.lees-doc h2, .lees-doc h3 { font-size: 16px; font-weight: 700; color: var(--tekst); text-transform: none; letter-spacing: 0;
+  margin: 18px 0 8px; }

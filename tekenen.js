@@ -173,11 +173,11 @@ window.VBTekenen = (function () {
       'belangrijkste afspraken op een rij. Klopt alles? Dan teken je onderaan. Dat duurt een paar minuten.</p>' +
       '<button type="button" class="knop licht" data-actie="naar-tekenen">Naar tekenen</button>' +
 
-      '<section class="kaart lees"><h2>1. Partnerovereenkomst</h2>' + g.overeenkomst_html +
+      '<section class="kaart lees"><h2>1. Partnerovereenkomst</h2><div class="lees-doc">' + g.overeenkomst_html + '</div>' +
       '<button type="button" class="klein-knop mt" data-pdf="overeenkomst">Download als PDF</button></section>' +
 
       '<section class="kaart lees"><h2>2. Zo werkt het</h2><p class="sub">De belangrijkste afspraken in het kort.</p>' +
-      g.zwh_html + '<button type="button" class="klein-knop mt" data-pdf="zwh">Download als PDF</button></section>' +
+      '<div class="lees-doc">' + g.zwh_html + '</div><button type="button" class="klein-knop mt" data-pdf="zwh">Download als PDF</button></section>' +
 
       '<section class="kaart"><h2>Algemene Partnervoorwaarden</h2><p><a href="#" class="pdf-link" data-pdf="av">' +
       'Algemene Partnervoorwaarden (PDF)</a></p><p class="klein">Deze voorwaarden horen bij de overeenkomst. Je hebt ze ook ' +
@@ -200,6 +200,10 @@ window.VBTekenen = (function () {
       '<button type="button" class="knop hoofd mt" data-actie="tekenen">Tekenen</button>' +
       '<p class="klein">Met "Tekenen" onderteken je de overeenkomst digitaal. Als bewijs leggen we het tijdstip, je IP-adres ' +
       'en je apparaat vast.</p></section>' + contactHtml());
+    // De titel en ondertitel van het document zelf staan al als kop van de kaart: weglaten.
+    document.querySelectorAll('.lees-doc').forEach(function (doc) {
+      while (doc.firstElementChild && doc.firstElementChild.classList.contains('lees-midden')) doc.firstElementChild.remove();
+    });
     pad = Handtekening($('t-handtekening'));
     pad.naWijziging = werkKnopBij;
     werkKnopBij();
