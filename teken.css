@@ -18,3 +18,23 @@
 .nav-knoppen .alleen { grid-column: 1 / -1; }
 .contact { color: var(--zacht); font-size: 14px; margin-top: 22px; text-align: center; }
 .contact a { color: var(--tekst); }
+
+/* Tekenpagina (fase 4c): leesversie van de overeenkomst en "Zo werkt het", handtekeningvak. */
+.lees { font-size: 15px; line-height: 1.5; }
+.lees h2 { font-size: 18px; }
+.lees p { margin: 0 0 10px; }
+.lees .lees-midden { text-align: center; }
+.lees .lees-hangend { padding-left: 1.8em; text-indent: -1.8em; }
+.lees .lees-tab { display: inline-block; width: 1.8em; text-indent: 0; }
+.lees ul { margin: 4px 0 12px; padding-left: 1.3em; }
+.lees li { margin-bottom: 4px; }
+.lees-tabel { width: 100%; border-collapse: collapse; margin: 6px 0 14px; font-size: 14px; }
+.lees-tabel td { border: 1px solid var(--lijn); padding: 6px 8px; vertical-align: top; overflow-wrap: break-word; }
+.lees-tabel td:first-child { width: 42%; }
+.lees-plek, .lees-handtekening { color: var(--zacht); font-style: italic; }
+.pdf-link { font-weight: 600; color: var(--tekst); }
+.handtekening-vak { display: block; width: 100%; height: 180px; margin: 6px 0 8px; border: 1px dashed var(--zacht);
+  border-radius: 12px; background: #fff; touch-action: none; cursor: crosshair; }
+.vink-regel span { font-weight: 500; }
+.uitleg-tb { margin: -2px 0 8px 32px; }
+.vink-regel { align-items: flex-start; }

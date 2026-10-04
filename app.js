@@ -225,9 +225,10 @@
 
   // ---------- Start ----------
   function start() {
-    if (/[#&]t=/.test(location.hash)) { // tekenlink (fase 4c volgt; tot die tijd staan de stukken als bijlage in de mail)
-      toonBericht('Je overeenkomst', 'Online tekenen kan binnenkort via deze link. De overeenkomst, "Zo werkt het" en de ' +
-        'Algemene Partnervoorwaarden staan als PDF in de mail van Virtualbite.');
+    var t = (/[#&]t=([^&]+)/.exec(location.hash) || [])[1];
+    if (/[#&]t=/.test(location.hash)) { // tekenlink: de tekenpagina (tekenen.js)
+      document.title = 'Virtualbite – je overeenkomst';
+      window.VBTekenen.start(t ? decodeURIComponent(t) : '');
       return;
     }
     if (!token) {
