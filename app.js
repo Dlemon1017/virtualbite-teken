@@ -110,22 +110,25 @@
       '<div><p class="merk">Je start met</p><h1>' + esc(merk.naam) + '</h1></div></div>';
   }
 
-  var NODIG = [
-    'KvK-nummer en BTW-nummer',
-    'BSN (alleen bij een eenmanszaak)',
-    'officiële bedrijfsnaam en vestigingsadres',
-    'e-mailadres voor facturen en voor communicatie',
-    'telefoonnummers (zaak en mobiel contactpersoon)',
-    'bezorg- en afhaaltijden per dag',
-    'hoe de zaak bestellingen ontvangt (koppeling: T-Connect, terminal, POS-API of anders)',
-    'gewenst bezorggebied (postcodes)'
-  ];
+  function nodig() {
+    return [
+      'KvK-nummer en BTW-nummer',
+      'BSN (alleen bij een eenmanszaak)',
+      'officiële bedrijfsnaam en vestigingsadres',
+      'e-mailadres voor facturen en voor communicatie',
+      'telefoonnummers (zaak en mobiel contactpersoon)',
+      'bezorg- en afhaaltijden per dag (op vrijdag, zaterdag, zondag en minimaal 2 andere dagen in ieder geval open ' +
+        minimumTekst() + ')',
+      'hoe de zaak bestellingen ontvangt (koppeling: T-Connect, terminal, POS-API of anders)',
+      'gewenst bezorggebied (postcodes)'
+    ];
+  }
 
   function toonStart() {
     zet(merkHtml() +
       '<section class="kaart"><h2>Dit heb je nodig</h2>' +
       '<p>Hoi ' + esc(partner.voornaam_contact || '') + ', fijn dat je er bent! Leg dit even klaar of zoek het op:</p>' +
-      '<ul class="checklist">' + NODIG.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>' +
+      '<ul class="checklist">' + nodig().map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>' +
       '<p class="klein mt">Invullen duurt ongeveer 10 tot 15 minuten. Je kunt tussendoor stoppen: alles wordt automatisch ' +
       'bewaard en je gaat later verder waar je was, ook op een ander apparaat.</p>' +
       '<button class="knop hoofd klaar mt" data-actie="starten">Starten</button></section>' + contactHtml());
@@ -244,6 +247,7 @@
       partner = r.partner;
       partner.voornaam_contact = r.voornaam;
       inst = r.inst || {};
+      zetOpeningsMinimum(inst.openings_minimum);
       f.huidig = partner;
       if (!r.begonnen) { toonStart(); return; }
       var i = eersteOnvolledigeStap();
