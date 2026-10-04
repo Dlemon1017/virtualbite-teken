@@ -225,6 +225,11 @@
 
   // ---------- Start ----------
   function start() {
+    if (/[#&]t=/.test(location.hash)) { // tekenlink (fase 4c volgt; tot die tijd staan de stukken als bijlage in de mail)
+      toonBericht('Je overeenkomst', 'Online tekenen kan binnenkort via deze link. De overeenkomst, "Zo werkt het" en de ' +
+        'Algemene Partnervoorwaarden staan als PDF in de mail van Virtualbite.');
+      return;
+    }
     if (!token) {
       toonBericht('Deze link werkt niet', 'Open de link uit de mail of het WhatsApp-bericht van Virtualbite.');
       return;
