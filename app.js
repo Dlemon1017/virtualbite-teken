@@ -101,6 +101,24 @@
   }
 
   // ---------- Schermen ----------
+  /** Verlopen link: de partner vraagt zelf een nieuwe aan (naar het e-mailadres; max. 1 keer per uur). */
+  function toonVerlopen() {
+    zet('<div class="afronden"><h1>Deze link is verlopen</h1><p>Vraag hieronder een nieuwe link aan; je krijgt hem meteen ' +
+      'per mail. Wat je al had ingevuld, blijft bewaard.</p><button class="knop hoofd klaar mt" data-actie="nieuwe-link">Stuur me ' +
+      'een nieuwe link</button><p class="klein mt" id="nieuweLinkUitslag" hidden></p></div>' + contactHtml());
+  }
+
+  function nieuweLink(knop) {
+    var herstel = bezig(knop, 'Versturen…');
+    api('formulier_nieuwe_link', {}).then(function (r) {
+      var uit = $('nieuweLinkUitslag');
+      if (r.gestuurd) { knop.hidden = true; uit.textContent = 'Er is een nieuwe link gestuurd naar ' + r.email + '. Kijk in je mail (ook bij spam).'; }
+      else if (r.te_vaak) { herstel(); uit.textContent = 'Er is net al een nieuwe link gestuurd. Kijk in je mail, of probeer het over een uur opnieuw.'; }
+      else { herstel(); uit.textContent = 'Deze link kan geen nieuwe link meer aanvragen. Neem contact op met Virtualbite.'; }
+      uit.hidden = false;
+    }).catch(function (err) { herstel(); toon(err.message, true); });
+  }
+
   function toonBericht(titel, tekst) {
     zet('<div class="afronden"><h1>' + esc(titel) + '</h1><p>' + esc(tekst) + '</p></div>' + contactHtml());
   }
@@ -205,6 +223,7 @@
       if (stap === FORMULIER_STAPPEN.length - 1) toonOverzicht(); else toonStap(stap + 1);
     } else if (actie === 'naar-stap') toonStap(Number(knop.getAttribute('data-stap')));
     else if (actie === 'versturen') versturen(knop);
+    else if (actie === 'nieuwe-link') nieuweLink(knop);
   });
 
   /** Versturen: eerst alles opslaan, dan de controle op de server. Bij problemen: naar de eerste stap met een probleem. */
@@ -242,10 +261,7 @@
         toonBericht('Deze link werkt niet (meer)', 'Controleer of je de hele link hebt gebruikt, of vraag Virtualbite om een nieuwe link.');
         return;
       }
-      if (r.status === 'verlopen') {
-        toonBericht('Deze link is verlopen', 'Vraag Virtualbite om een nieuwe link. Wat je al had ingevuld, blijft bewaard.');
-        return;
-      }
+      if (r.status === 'verlopen') { toonVerlopen(); return; }
       if (r.status === 'verstuurd') {
         toonBericht('Je gegevens zijn verstuurd', 'Virtualbite controleert alles en je ontvangt de overeenkomst per mail.');
         return;

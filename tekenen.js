@@ -116,7 +116,23 @@ window.VBTekenen = (function () {
     return {
       leeg: function () { return lengte < 25; }, // een stip of streepje is geen handtekening
       wis: maat,
-      png: function () { return canvas.toDataURL('image/png'); }
+      png: function () { // bijgesneden tot de getekende lijnen (+ marge), zodat hij op de lijn in de PDF goed groot staat
+        var w = canvas.width, h = canvas.height;
+        var data = ctx.getImageData(0, 0, w, h).data;
+        var x0 = w, y0 = h, x1 = -1, y1 = -1;
+        for (var y = 0; y < h; y += 2) {
+          for (var x = 0; x < w; x += 2) {
+            if (data[(y * w + x) * 4 + 3] > 20) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+          }
+        }
+        if (x1 < 0) return canvas.toDataURL('image/png');
+        var m = Math.round(8 * (window.devicePixelRatio || 1));
+        x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(w - 1, x1 + m); y1 = Math.min(h - 1, y1 + m);
+        var uit = document.createElement('canvas');
+        uit.width = x1 - x0 + 1; uit.height = y1 - y0 + 1;
+        uit.getContext('2d').drawImage(canvas, x0, y0, uit.width, uit.height, 0, 0, uit.width, uit.height);
+        return uit.toDataURL('image/png');
+      }
     };
   }
 
@@ -265,6 +281,22 @@ window.VBTekenen = (function () {
     });
   }
 
+  function nieuweLink(knop) {
+    var oud = knop.textContent;
+    knop.disabled = true;
+    knop.textContent = 'Versturen…';
+    api('teken_nieuwe_link', {}).then(function (r) {
+      var uit = $('nieuweLinkUitslag');
+      if (r.gestuurd) { knop.hidden = true; uit.textContent = 'Er is een nieuwe link gestuurd naar ' + r.email + '. Kijk in je mail (ook bij spam).'; }
+      else {
+        knop.disabled = false; knop.textContent = oud;
+        uit.textContent = r.te_vaak ? 'Er is net al een nieuwe link gestuurd. Kijk in je mail, of probeer het over een uur opnieuw.' :
+          'Deze link kan geen nieuwe link meer aanvragen. Neem contact op met Virtualbite.';
+      }
+      uit.hidden = false;
+    }).catch(function (e) { knop.disabled = false; knop.textContent = oud; toonFout(e.message); });
+  }
+
   function toonBedankt() {
     var g = gegevens || {};
     bericht('Bedankt, ' + (g.voornaam || '') + '!', 'Je overeenkomst is getekend. Binnen een paar minuten krijg je alles per ' +
@@ -278,7 +310,9 @@ window.VBTekenen = (function () {
       bericht('Je hebt al getekend', (gegevens && gegevens.getekend_op ? 'Op ' + gegevens.getekend_op + '. ' : '') +
         'Alles is per mail naar je gestuurd.');
     } else if (status === 'verlopen') {
-      bericht('Deze link is verlopen', 'Vraag Virtualbite om een nieuwe link.');
+      zet('<div class="afronden"><h1>Deze link is verlopen</h1><p>Vraag hieronder een nieuwe link aan; je krijgt hem meteen ' +
+        'per mail.</p><button class="knop hoofd klaar mt" data-actie="nieuwe-link">Stuur me een nieuwe link</button>' +
+        '<p class="klein mt" id="nieuweLinkUitslag" hidden></p></div>' + contactHtml());
     } else {
       bericht('Deze link werkt niet meer', 'Waarschijnlijk is de overeenkomst aangepast; je krijgt een nieuwe link.');
     }
@@ -303,6 +337,7 @@ window.VBTekenen = (function () {
       if (actie === 'naar-tekenen') $('tekenen').scrollIntoView({ behavior: 'smooth', block: 'start' });
       else if (actie === 'opnieuw') { pad.wis(); werkKnopBij(); }
       else if (actie === 'tekenen') tekenen(knop);
+      else if (actie === 'nieuwe-link') nieuweLink(knop);
     });
     inhoud.addEventListener('change', function (e) {
       var v = e.target.getAttribute && e.target.getAttribute('data-vink');
