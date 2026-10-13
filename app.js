@@ -244,6 +244,14 @@
 
   // ---------- Start ----------
   function start() {
+    // Een andere link op dezelfde pagina (bijv. van het bedankscherm naar de planner): opnieuw laden.
+    window.addEventListener('hashchange', function () { location.reload(); });
+    var o = (/[#&]o=([^&]+)/.exec(location.hash) || [])[1];
+    if (/[#&]o=/.test(location.hash)) { // planlink: onboarding en training kiezen (planner.js)
+      document.title = 'Virtualbite – plan je onboarding';
+      window.VBPlanner.start(o ? decodeURIComponent(o) : '');
+      return;
+    }
     var t = (/[#&]t=([^&]+)/.exec(location.hash) || [])[1];
     if (/[#&]t=/.test(location.hash)) { // tekenlink: de tekenpagina (tekenen.js)
       document.title = 'Virtualbite – je overeenkomst';

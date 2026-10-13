@@ -273,7 +273,7 @@ window.VBTekenen = (function () {
         vak.hidden = false;
         return;
       }
-      if (r.status === 'getekend') return toonBedankt();
+      if (r.status === 'getekend') return toonBedankt(r.plan_link);
       toonStatus(r.status);
     }).catch(function (e) {
       knop.disabled = false; knop.textContent = oud;
@@ -297,12 +297,16 @@ window.VBTekenen = (function () {
     }).catch(function (e) { knop.disabled = false; knop.textContent = oud; toonFout(e.message); });
   }
 
-  function toonBedankt() {
+  function toonBedankt(planLink) {
     var g = gegevens || {};
     bericht('Bedankt, ' + (g.voornaam || '') + '!', 'Je overeenkomst is getekend. Binnen een paar minuten krijg je alles per ' +
       'mail: de getekende overeenkomst, "Zo werkt het", de Algemene Partnervoorwaarden' +
       (g.tb ? ' en het getekende registratieformulier van Thuisbezorgd. Wij melden je aan bij Thuisbezorgd en nemen' :
         '. Wij nemen') + ' contact met je op over de start.');
+    if (planLink) {
+      $('inhoud').querySelector('.afronden').insertAdjacentHTML('beforeend', '<p>Kies nu meteen wanneer we je onboarding en ' +
+        'training doen.</p><a class="knop hoofd klaar knop-link" href="' + esc(planLink) + '">Plan je onboarding en training</a>');
+    }
   }
 
   function toonStatus(status) {
