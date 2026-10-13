@@ -49,5 +49,5 @@
 .plan-lijst { list-style: none; margin: 0 0 18px; padding: 0; font-weight: 600; }
 .plan-lijst li { padding: 6px 0; }
 .afronden .plan-lijst { font-size: 17px; }
-#plan-overzicht .plan-lijst { margin: 0; }
+.kaart .plan-lijst { margin: 0; }
 .knop-link { display: block; text-align: center; text-decoration: none; box-sizing: border-box; }
