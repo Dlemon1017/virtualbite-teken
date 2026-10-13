@@ -10,6 +10,11 @@ window.VBPlanner = (function () {
   var token = '';
   var g = null; // gegevens van plan_start
   var keuze = { onboarding: {}, training: {} };
+  var soort = 'beide'; // na "Opnieuw laten kiezen" van één onderdeel: 'onboarding' of 'training'
+
+  /** Welke onderdelen de partner nu kiest. */
+  function nodig() { return soort === 'beide' ? ['onboarding', 'training'] : [soort]; }
+  function compleet() { return nodig().every(function (s) { return !!keuze[s].tijd; }); }
 
   function esc(t) {
     return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
@@ -68,9 +73,9 @@ window.VBPlanner = (function () {
   }
 
   // ---------- Kiezen ----------
-  function dagenVan(soort) {
-    var dagen = (g.mogelijkheden || {})[soort] || [];
-    if (soort === 'training' && keuze.onboarding.datum) dagen = dagen.filter(function (d) { return d.datum > keuze.onboarding.datum; });
+  function dagenVan(s) {
+    var dagen = (g.mogelijkheden || {})[s] || [];
+    if (soort === 'beide' && s === 'training' && keuze.onboarding.datum) dagen = dagen.filter(function (d) { return d.datum > keuze.onboarding.datum; });
     return dagen;
   }
 
@@ -80,23 +85,23 @@ window.VBPlanner = (function () {
     }).join('') + '</div>';
   }
 
-  function blokHtml(soort) {
-    var k = keuze[soort];
+  function blokHtml(s) {
+    var k = keuze[s];
     var h = '';
-    if (soort === 'training' && !keuze.onboarding.datum) return '<p class="klein">Kies eerst de onboarding.</p>';
-    var dagen = dagenVan(soort);
+    if (soort === 'beide' && s === 'training' && !keuze.onboarding.datum) return '<p class="klein">Kies eerst de onboarding.</p>';
+    var dagen = dagenVan(s);
     if (!dagen.length) return '<p class="klein">Na deze onboarding zijn er geen dagen meer vrij. Kies een eerdere onboarding.</p>';
-    h += '<div class="label">Dag</div>' + pillen(soort, 'datum', dagen.map(function (d) { return [d.datum, d.label]; }), k.datum);
+    h += '<div class="label">Dag</div>' + pillen(s, 'datum', dagen.map(function (d) { return [d.datum, d.label]; }), k.datum);
     var dag = dagen.filter(function (d) { return d.datum === k.datum; })[0];
-    if (dag) h += '<div class="label">Begintijd</div>' + pillen(soort, 'tijd', dag.tijden.map(function (t) { return [t, t]; }), k.tijd);
+    if (dag) h += '<div class="label">Begintijd</div>' + pillen(s, 'tijd', dag.tijden.map(function (t) { return [t, t]; }), k.tijd);
     return h;
   }
 
   function overzicht() {
-    var regel = function (soort, naam, duur) {
-      var k = keuze[soort];
-      if (!k.datum || !k.tijd) return '';
-      var dag = ((g.mogelijkheden || {})[soort] || []).filter(function (d) { return d.datum === k.datum; })[0];
+    var regel = function (s, naam, duur) {
+      var k = keuze[s];
+      if (!k.datum || !k.tijd || nodig().indexOf(s) === -1) return '';
+      var dag = ((g.mogelijkheden || {})[s] || []).filter(function (d) { return d.datum === k.datum; })[0];
       var eind = (function () { var m = Number(k.tijd.slice(0, 2)) * 60 + Number(k.tijd.slice(3)) + duur; return (m < 600 ? '0' : '') + Math.floor(m / 60) + ':' + (m % 60 < 10 ? '0' : '') + m % 60; })();
       return naam + ' – ' + (dag ? dag.label : k.datum) + ', ' + k.tijd + '–' + eind;
     };
@@ -104,26 +109,37 @@ window.VBPlanner = (function () {
   }
 
   function teken() {
-    $('blok-onboarding').innerHTML = blokHtml('onboarding');
-    $('blok-training').innerHTML = blokHtml('training');
+    nodig().forEach(function (s) { $('blok-' + s).innerHTML = blokHtml(s); });
     var o = overzicht();
     $('plan-overzicht').innerHTML = o.length ? '<h2>Je keuze</h2>' + lijstHtml(o) : '';
     $('plan-overzicht').hidden = !o.length;
-    var klaar = !!(keuze.onboarding.tijd && keuze.training.tijd);
+    var klaar = compleet();
     $('plan-bevestig').classList.toggle('klaar', klaar);
     if (klaar) $('plan-fout').hidden = true;
   }
 
   function toonPagina() {
     var merk = g.merk || {};
+    soort = g.soort || 'beide';
+    var titel = soort === 'onboarding' ? 'Plan je onboarding' : soort === 'training' ? 'Plan je training' : 'Plan je onboarding en training';
+    var uitleg = soort === 'onboarding' ? 'Hoi ' + esc(g.voornaam || '') + ', kies een nieuw moment voor je onboarding (1 uur). Die doen we ' +
+      'online via Google Meet; je krijgt de link in de agenda-uitnodiging.' :
+      soort === 'training' ? 'Hoi ' + esc(g.voornaam || '') + ', kies een nieuw moment voor je training (3 uur) op je locatie: ' +
+      esc(g.adres) + '.' :
+      'Hoi ' + esc(g.voornaam || '') + ', de onboarding (1 uur) doen we online via Google Meet; je krijgt de link in de ' +
+      'agenda-uitnodiging. De training (3 uur) is op je locatie: ' + esc(g.adres) + '.';
+    var nr = function (n) { return soort === 'beide' ? n + '. ' : ''; };
+    var blokken = {
+      onboarding: '<section class="kaart"><h2>' + nr(1) + 'Onboarding (online, 1 uur)</h2><p class="klein">' +
+        (soort === 'onboarding' ? 'Kies een dag vóór je training en een begintijd.' : 'Kies een dag en een begintijd.') + '</p>' +
+        '<div id="blok-onboarding"></div></section>',
+      training: '<section class="kaart"><h2>' + nr(2) + 'Training (op locatie, 3 uur)</h2><p class="klein">Kies een dag na je onboarding ' +
+        'en een begintijd.</p><div id="blok-training"></div></section>'
+    };
     zet('<div class="merk-blok">' + (merk.logo ? '<img src="merken/' + esc(merk.logo) + '" alt="' + esc(merk.naam) + '">' : '') +
-      '<div><h1>Plan je onboarding en training</h1></div></div>' +
-      '<p>Hoi ' + esc(g.voornaam || '') + ', de onboarding (1 uur) doen we online via Google Meet; je krijgt de link in de ' +
-      'agenda-uitnodiging. De training (3 uur) is op je locatie: ' + esc(g.adres) + '.</p>' +
-      '<section class="kaart"><h2>1. Onboarding (online, 1 uur)</h2><p class="klein">Kies een dag en een begintijd.</p>' +
-      '<div id="blok-onboarding"></div></section>' +
-      '<section class="kaart"><h2>2. Training (op locatie, 3 uur)</h2><p class="klein">Kies een dag na je onboarding en een ' +
-      'begintijd.</p><div id="blok-training"></div></section>' +
+      '<div><h1>' + esc(titel) + '</h1></div></div><p>' + uitleg + '</p>' +
+      (soort !== 'beide' && (g.vast || []).length ? '<section class="kaart"><h2>Staat al gepland</h2>' + lijstHtml(g.vast) + '</section>' : '') +
+      nodig().map(function (s) { return blokken[s]; }).join('') +
       '<p class="klein">Je kunt kiezen van ' + esc(g.vanaf) + ' tot en met ' + esc(g.tot) + '.</p>' +
       '<section class="kaart" id="plan-overzicht" hidden></section>' +
       '<div id="plan-fout" class="melding-blok mb-let" hidden></div>' +
@@ -132,9 +148,9 @@ window.VBPlanner = (function () {
   }
 
   function bevestig(knop) {
-    if (!(keuze.onboarding.tijd && keuze.training.tijd)) {
+    if (!compleet()) {
       var f = $('plan-fout');
-      f.textContent = !keuze.onboarding.tijd ? 'Kies een dag en tijd voor de onboarding.' : 'Kies een dag en tijd voor de training.';
+      f.textContent = 'Kies een dag en tijd voor de ' + nodig().filter(function (s) { return !keuze[s].tijd; })[0] + '.';
       f.hidden = false;
       f.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -158,8 +174,9 @@ window.VBPlanner = (function () {
 
   function toonGepland(lijst, net, email) {
     if (net) {
-      bericht('Gepland!', lijstHtml(lijst) + '<p>Je krijgt van Google Agenda voor beide afspraken een uitnodiging' +
-        (email ? ' op ' + esc(email) : '') + '; bij de onboarding staat de Meet-link. Iets wijzigen? Neem contact op met Dimitri.</p>');
+      bericht('Gepland!', lijstHtml(lijst) + '<p>Je krijgt van Google Agenda ' + (soort === 'beide' ? 'voor beide afspraken een uitnodiging' :
+        'een uitnodiging') + (email ? ' op ' + esc(email) : '') + (soort === 'training' ? '.' : '; bij de onboarding staat de Meet-link.') +
+        ' Iets wijzigen? Neem contact op met Dimitri.</p>');
     } else {
       bericht('Je afspraken staan gepland', lijstHtml(lijst) + '<p>Iets wijzigen? Neem contact op met Dimitri.</p>');
     }
@@ -174,19 +191,20 @@ window.VBPlanner = (function () {
 
   /** Na opnieuw laden: alleen keuzes houden die nog vrij zijn. */
   function houdGeldigeKeuze() {
-    ['onboarding', 'training'].forEach(function (soort) {
-      var k = keuze[soort];
-      var dag = (g.mogelijkheden[soort] || []).filter(function (d) { return d.datum === k.datum; })[0];
-      if (!dag) keuze[soort] = {};
+    ['onboarding', 'training'].forEach(function (s) {
+      var k = keuze[s];
+      var dag = (g.mogelijkheden[s] || []).filter(function (d) { return d.datum === k.datum; })[0];
+      if (!dag) keuze[s] = {};
       else if (k.tijd && dag.tijden.indexOf(k.tijd) === -1) k.tijd = '';
     });
-    if (keuze.training.datum && keuze.training.datum <= (keuze.onboarding.datum || '')) keuze.training = {};
+    if (soort === 'beide' && keuze.training.datum && keuze.training.datum <= (keuze.onboarding.datum || '')) keuze.training = {};
   }
 
   function laad(melding) {
     return api('plan_start', {}, true).then(function (r) {
       g = r;
       if (r.status === 'open') {
+        soort = r.soort || 'beide';
         houdGeldigeKeuze();
         toonPagina();
         if (melding) { var f = $('plan-fout'); f.textContent = melding; f.hidden = false; f.scrollIntoView({ block: 'center' }); }
@@ -206,11 +224,11 @@ window.VBPlanner = (function () {
       var b = e.target.closest('.pillen button');
       if (b) {
         var groep = b.closest('.pillen');
-        var soort = groep.getAttribute('data-soort');
+        var s = groep.getAttribute('data-soort');
         var wat = groep.getAttribute('data-wat');
-        keuze[soort][wat] = b.getAttribute('data-waarde');
-        if (wat === 'datum') keuze[soort].tijd = '';
-        if (soort === 'onboarding' && keuze.training.datum && keuze.training.datum <= keuze.onboarding.datum) keuze.training = {};
+        keuze[s][wat] = b.getAttribute('data-waarde');
+        if (wat === 'datum') keuze[s].tijd = '';
+        if (soort === 'beide' && s === 'onboarding' && keuze.training.datum && keuze.training.datum <= keuze.onboarding.datum) keuze.training = {};
         teken();
         return;
       }
