@@ -1,5 +1,5 @@
 /*
- * Partnerpagina Virtualbite (virtualbite-teken, later teken.virtualbite.nl). Fase 3: de partner vult zelf in.
+ * Partnerpagina Virtualbite (teken.virtualbite.nl, repo virtualbite-teken). Fase 3: de partner vult zelf in.
  * Werkt met het token uit de persoonlijke link (#f=…), zonder inloggen. Startscherm "Dit heb je nodig", formulier in
  * stappen met automatisch opslaan (gedeeld/formulier.js, dezelfde regels als de server), overzicht, Versturen, klaar.
  */
