@@ -131,9 +131,9 @@
   function nodig() {
     return [
       'KvK-nummer en BTW-nummer',
-      'officiële bedrijfsnaam en vestigingsadres',
+      'officiële bedrijfsnaam en vestigingsplaats (zoals bij de KvK)',
       'e-mailadres voor facturen en voor communicatie',
-      'telefoonnummers (zaak en mobiel contactpersoon)',
+      'adres van de locatie (waar de keuken is), telefoonnummer en mobiel nummer van de contactpersoon daar',
       'bezorg- en afhaaltijden per dag (op vrijdag, zaterdag, zondag en minimaal 2 andere dagen in ieder geval open ' +
         minimumTekst() + ')',
       'hoe de zaak bestellingen ontvangt (koppeling: T-Connect, terminal, POS-API of anders)',
