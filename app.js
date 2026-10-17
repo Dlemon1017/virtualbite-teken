@@ -131,7 +131,6 @@
   function nodig() {
     return [
       'KvK-nummer en BTW-nummer',
-      'BSN (alleen bij een eenmanszaak)',
       'officiële bedrijfsnaam en vestigingsadres',
       'e-mailadres voor facturen en voor communicatie',
       'telefoonnummers (zaak en mobiel contactpersoon)',
