@@ -199,7 +199,7 @@ window.VBTekenen = (function () {
       'per mail gekregen.</p></section>' +
 
       '<section class="kaart" id="tekenen"><h2>3. Tekenen</h2>' +
-      '<label for="t-naam">Je naam</label><input id="t-naam" autocomplete="name" value="' + esc(g.naam) + '">' +
+      '<label for="t-naam">Je naam</label><input id="t-naam" autocomplete="off" autocapitalize="words" value="' + esc(g.naam) + '">' +
       '<label for="t-functie">Functie</label><input id="t-functie" autocomplete="organization-title" value="' + esc(g.functie) + '">' +
       vinkjes.map(function (v) {
         return '<label class="vink-regel"><input type="checkbox" data-vink="' + v[0] + '"> <span>' + esc(v[1]) + '</span></label>';

@@ -63,3 +63,10 @@
   animation: laad-schuif 1.1s ease-in-out infinite; }
 @keyframes laad-schuif { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
 @media (prefers-reduced-motion: reduce) { .laad-balk span { animation: none; width: 100%; } }
+
+/* "Aanpassing gevraagd": wat de partner moet aanpassen. */
+.aanpassing-blok strong { display: block; margin-bottom: 4px; }
+.aanpassing-blok p { margin: 0 0 8px; }
+.aanpassing-toelichting { white-space: pre-line; font-weight: 600; }
+.veld.aanpassen, .tussenkop.aanpassen { border-left: 3px solid #e0a800; padding-left: 10px; margin-left: -13px; }
+.kaart.aanpassen { box-shadow: inset 3px 0 0 #e0a800; }

@@ -14,6 +14,7 @@
   var merk = { naam: '', logo: '' };
   var contact = {};
   var stap = 0;
+  var aanpassing = null; // "Aanpassing gevraagd": {velden, labels, toelichting}
 
   function esc(t) {
     return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
@@ -161,12 +162,45 @@
     return -1;
   }
 
+  // ---------- "Aanpassing gevraagd": bovenaan wat er aangepast moet worden, de velden zelf gemarkeerd ----------
+  function stapVanVeld(veld) {
+    for (var i = 0; i < FORMULIER_STAPPEN.length; i++) {
+      if (FORMULIER_STAPPEN[i].velden.some(function (d) { return d.veld === veld; })) return i;
+    }
+    return -1;
+  }
+
+  /** Blok bovenaan: de toelichting van Virtualbite en per onderdeel een knop naar de juiste stap. */
+  function aanpassingHtml() {
+    if (!aanpassing) return '';
+    var gezien = {};
+    var knoppen = aanpassing.velden.map(function (v) {
+      var i = stapVanVeld(v);
+      if (i === -1 || gezien[i]) return '';
+      gezien[i] = true;
+      return '<button type="button" class="klein-knop" data-actie="naar-stap" data-stap="' + i + '">' +
+        esc(FORMULIER_STAPPEN[i].titel) + '</button>';
+    }).join('');
+    return '<div class="melding-blok mb-let aanpassing-blok"><strong>Graag nog aanpassen</strong>' +
+      '<p class="aanpassing-toelichting">' + esc(aanpassing.toelichting) + '</p>' +
+      '<p>Het gaat om: ' + esc(aanpassing.labels.join(', ')) + '. Alles wat je al had ingevuld, staat er nog.</p>' +
+      '<div class="knoppen-rij">' + knoppen + '</div></div>';
+  }
+
+  /** Velden (en de tussenkop van het locatieadres) markeren. */
+  function markeerAanpassing() {
+    if (!aanpassing) return;
+    aanpassing.velden.forEach(function (v) {
+      document.querySelectorAll('[data-rij="' + v + '"], [data-kop="' + v + '"]').forEach(function (el) { el.classList.add('aanpassen'); });
+    });
+  }
+
   function toonStap(n) {
     stap = n;
     var st = FORMULIER_STAPPEN[n];
     var laatste = n === FORMULIER_STAPPEN.length - 1;
     zet('<div class="voortgang"><div class="klein">Stap ' + (n + 1) + ' van ' + FORMULIER_STAPPEN.length + '</div>' +
-      '<div class="balkje"><span></span></div></div>' +
+      '<div class="balkje"><span></span></div></div>' + aanpassingHtml() +
       '<section class="kaart"><h2>' + esc(st.titel) + '</h2>' + f.stapVelden(st, partner, false) +
       (st.titel === 'Bezorggebied' ? '<div class="klein" id="afstandInfo" hidden></div>' : '') + '</section>' +
       '<div class="nav-knoppen">' + (n > 0 ? '<button class="knop licht" data-actie="vorige">Vorige</button>' : '') +
@@ -174,6 +208,7 @@
       '</button></div>' + contactHtml());
     zetVoortgang((n + 1) / (FORMULIER_STAPPEN.length + 1));
     f.naTekenen();
+    markeerAanpassing();
     if (st.titel === 'Bezorggebied' && String(partner.postcodes_gewenst || '').trim() && !(partner.markering || {}).actueel) {
       f.planAfstanden(true);
     }
@@ -183,9 +218,10 @@
     stap = -1;
     zet('<div class="voortgang"><div class="klein">Laatste stap: controleren en versturen</div>' +
       '<div class="balkje"><span></span></div></div>' +
-      '<h1>Overzicht</h1><p class="sub">Klopt alles? Dan kun je je gegevens versturen.</p>' +
+      '<h1>Overzicht</h1><p class="sub">Klopt alles? Dan kun je je gegevens versturen.</p>' + aanpassingHtml() +
       FORMULIER_STAPPEN.map(function (st, i) {
-        return '<section class="kaart"><div class="kaart-kop"><h2>' + esc(st.titel) + '</h2>' +
+        var gevraagd = aanpassing && st.velden.some(function (d) { return aanpassing.velden.indexOf(d.veld) !== -1; });
+        return '<section class="kaart' + (gevraagd ? ' aanpassen' : '') + '"><div class="kaart-kop"><h2>' + esc(st.titel) + '</h2>' +
           '<button type="button" class="tekst-knop" data-actie="naar-stap" data-stap="' + i + '">Wijzig</button></div>' +
           VBSamenvatting(st, partner) + '</section>';
       }).join('') +
@@ -278,6 +314,11 @@
       inst = r.inst || {};
       zetOpeningsMinimum(inst.openings_minimum);
       f.huidig = partner;
+      if (r.aanpassing) { // Virtualbite vraagt een aanpassing: meteen het overzicht met bovenaan wat er moet gebeuren
+        aanpassing = r.aanpassing;
+        toonOverzicht();
+        return;
+      }
       if (!r.begonnen) { toonStart(); return; }
       var i = eersteOnvolledigeStap();
       if (i === -1) toonOverzicht(); else toonStap(i);
