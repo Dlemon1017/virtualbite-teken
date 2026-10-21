@@ -159,6 +159,10 @@
     for (var i = 0; i < FORMULIER_STAPPEN.length; i++) {
       if (FORMULIER_STAPPEN[i].velden.some(function (d) { return fouten[d.veld]; })) return i;
     }
+    // Shakes (niet verplicht, standaard Ja): wie de stap nog niet zag, komt er eerst langs.
+    if (!partner.shakes) for (var j = 0; j < FORMULIER_STAPPEN.length; j++) {
+      if (FORMULIER_STAPPEN[j].velden.some(function (d) { return d.veld === 'shakes'; })) return j;
+    }
     return -1;
   }
 
