@@ -182,6 +182,8 @@ window.VBTekenen = (function () {
       ['overeenkomst', 'Ik heb de partnerovereenkomst gelezen en ga ermee akkoord.'],
       ['av_zwh', 'Ik heb de Algemene Partnervoorwaarden en "Zo werkt het" ontvangen.']
     ];
+    // De partner ondertekent ook het TB-formulier (besluit 29-10-2026); tekst van de server (TEKEN_VINKJE_TB).
+    if (g.tb) vinkjes.push(['tb', g.vinkje_tb || 'Ik heb het registratieformulier van Thuisbezorgd gecontroleerd en onderteken het.']);
     zet('<div class="merk-blok">' + (merk.logo ? '<img src="merken/' + esc(merk.logo) + '" alt="' + esc(merk.naam) + '">' : '') +
       '<div><h1>Je overeenkomst voor ' + esc(merk.naam || 'Virtualbite') + '</h1></div></div>' +
       '<p>Hoi ' + esc(g.voornaam || '') + ', je overeenkomst staat klaar. Lees hem rustig door; "Zo werkt het" zet de ' +
@@ -202,7 +204,11 @@ window.VBTekenen = (function () {
       '<label for="t-naam">Je naam</label><input id="t-naam" autocomplete="off" autocapitalize="words" value="' + esc(g.naam) + '">' +
       '<label for="t-functie">Functie</label><input id="t-functie" autocomplete="organization-title" value="' + esc(g.functie) + '">' +
       vinkjes.map(function (v) {
-        return '<label class="vink-regel"><input type="checkbox" data-vink="' + v[0] + '"> <span>' + esc(v[1]) + '</span></label>';
+        return '<label class="vink-regel"><input type="checkbox" data-vink="' + v[0] + '"> <span>' + esc(v[1]) +
+          (v[0] === 'tb' ? ' <button type="button" class="info" data-uitlegtb aria-label="Uitleg bij het registratieformulier" ' +
+            'aria-expanded="false">i</button>' : '') + '</span></label>' +
+          (v[0] === 'tb' ? '<div class="klein uitleg-tb" id="uitlegTb" hidden>Daarmee melden wij je aan bij Thuisbezorgd. Het ' +
+            'formulier is ingevuld met de gegevens die je ons hebt gegeven; jouw naam, de datum en je handtekening komen op blad 2.</div>' : '');
       }).join('') +
       '<div class="label">Handtekening</div><p class="klein">Zet hier je handtekening met je vinger (of muis).</p>' +
       '<canvas id="t-handtekening" class="handtekening-vak" aria-label="Handtekeningvak"></canvas>' +
@@ -296,7 +302,7 @@ window.VBTekenen = (function () {
     var g = gegevens || {};
     bericht('Bedankt, ' + (g.voornaam || '') + '!', 'Je overeenkomst is getekend. Binnen een paar minuten krijg je alles per ' +
       'mail: de getekende overeenkomst, "Zo werkt het", de Algemene Partnervoorwaarden' +
-      (g.tb ? ' en het ingevulde registratieformulier van Thuisbezorgd. Wij melden je aan bij Thuisbezorgd en nemen' :
+      (g.tb ? ' en het ondertekende registratieformulier van Thuisbezorgd. Wij melden je aan bij Thuisbezorgd en nemen' :
         '. Wij nemen') + ' contact met je op over de start.');
     if (planLink) {
       $('inhoud').querySelector('.afronden').insertAdjacentHTML('beforeend', '<p>Kies nu meteen wanneer we je onboarding en ' +
@@ -323,6 +329,13 @@ window.VBTekenen = (function () {
     inhoud.addEventListener('click', function (e) {
       var pdfKnop = e.target.closest('[data-pdf]');
       if (pdfKnop) { e.preventDefault(); download(pdfKnop.getAttribute('data-pdf'), pdfKnop); return; }
+      if (e.target.closest('[data-uitlegtb]')) {
+        e.preventDefault(); // niet het vinkje omzetten
+        var u = $('uitlegTb');
+        u.hidden = !u.hidden;
+        e.target.closest('[data-uitlegtb]').setAttribute('aria-expanded', String(!u.hidden));
+        return;
+      }
       var knop = e.target.closest('[data-actie]');
       if (!knop) return;
       var actie = knop.getAttribute('data-actie');
