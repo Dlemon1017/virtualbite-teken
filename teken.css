@@ -37,6 +37,7 @@
   border-radius: 12px; background: #fff; touch-action: none; cursor: crosshair; }
 .vink-regel span { font-weight: 500; }
 .uitleg-tb { margin: -2px 0 8px 32px; }
+.vink-link { margin: -4px 0 8px 32px; }
 .vink-regel { align-items: flex-start; }
 .lees-doc h2, .lees-doc h3 { font-size: 16px; font-weight: 700; color: var(--tekst); text-transform: none; letter-spacing: 0;
   margin: 18px 0 8px; }

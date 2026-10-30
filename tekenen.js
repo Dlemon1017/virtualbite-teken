@@ -207,6 +207,8 @@ window.VBTekenen = (function () {
         return '<label class="vink-regel"><input type="checkbox" data-vink="' + v[0] + '"> <span>' + esc(v[1]) +
           (v[0] === 'tb' ? ' <button type="button" class="info" data-uitlegtb aria-label="Uitleg bij het registratieformulier" ' +
             'aria-expanded="false">i</button>' : '') + '</span></label>' +
+          (v[0] === 'tb' ? '<p class="klein vink-link"><a href="#" class="pdf-link" data-pdf="tb">Bekijk het registratieformulier ' +
+            '(PDF)</a></p>' : '') +
           (v[0] === 'tb' ? '<div class="klein uitleg-tb" id="uitlegTb" hidden>Daarmee melden wij je aan bij Thuisbezorgd. Het ' +
             'formulier is ingevuld met de gegevens die je ons hebt gegeven; jouw naam, de datum en je handtekening komen op blad 2.</div>' : '');
       }).join('') +
@@ -224,7 +226,7 @@ window.VBTekenen = (function () {
     pad = Handtekening($('t-handtekening'));
     pad.naWijziging = werkKnopBij;
     werkKnopBij();
-    ['overeenkomst', 'zwh', 'av'].forEach(haalPdf); // alvast ophalen: downloaden gaat dan direct
+    ['overeenkomst', 'zwh', 'av'].concat(g.tb ? ['tb'] : []).forEach(haalPdf); // alvast ophalen: downloaden gaat dan direct
   }
 
   function ontbreekt() {
