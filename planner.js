@@ -1,7 +1,7 @@
 /*
- * Onboarding-planner (zelfde site als de partnerpagina, link #o={token}). De partner kiest een onboarding (online via
- * Google Meet, 1 uur) en een training (op locatie, 3 uur, op een latere dag) uit de vrije tijd van Dimitri. Dagen en
- * tijden als keuzeknoppen ("pillen") in de stijl van de partnerpagina. De server controleert alles opnieuw.
+ * Onboarding-planner (zelfde site als de partnerpagina, link #o={token}). De partner kiest een dag en begintijd voor de
+ * sessie "Onboarding & training" op locatie (3 uur, ook de kennismaking met de trainer) uit de vrije tijd van de trainer.
+ * Dagen en tijden als keuzeknoppen ("pillen") in de stijl van de partnerpagina. De server controleert alles opnieuw.
  */
 window.VBPlanner = (function () {
   'use strict';
@@ -9,12 +9,7 @@ window.VBPlanner = (function () {
   var $ = function (id) { return document.getElementById(id); };
   var token = '';
   var g = null; // gegevens van plan_start
-  var keuze = { onboarding: {}, training: {} };
-  var soort = 'beide'; // na "Opnieuw laten kiezen" van één onderdeel: 'onboarding' of 'training'
-
-  /** Welke onderdelen de partner nu kiest. */
-  function nodig() { return soort === 'beide' ? ['onboarding', 'training'] : [soort]; }
-  function compleet() { return nodig().every(function (s) { return !!keuze[s].tijd; }); }
+  var keuze = {}; // {datum, tijd}
 
   function esc(t) {
     return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
@@ -73,73 +68,48 @@ window.VBPlanner = (function () {
   }
 
   // ---------- Kiezen ----------
-  function dagenVan(s) {
-    var dagen = (g.mogelijkheden || {})[s] || [];
-    if (soort === 'beide' && s === 'training' && keuze.onboarding.datum) dagen = dagen.filter(function (d) { return d.datum > keuze.onboarding.datum; });
-    return dagen;
-  }
-
-  function pillen(soort, wat, waarden, gekozen) {
-    return '<div class="keuze pillen" role="group" data-soort="' + soort + '" data-wat="' + wat + '">' + waarden.map(function (w) {
+  function pillen(wat, waarden, gekozen) {
+    return '<div class="keuze pillen" role="group" data-wat="' + wat + '">' + waarden.map(function (w) {
       return '<button type="button" data-waarde="' + esc(w[0]) + '" aria-pressed="' + (w[0] === gekozen) + '">' + esc(w[1]) + '</button>';
     }).join('') + '</div>';
   }
 
-  function blokHtml(s) {
-    var k = keuze[s];
-    var h = '';
-    if (soort === 'beide' && s === 'training' && !keuze.onboarding.datum) return '<p class="klein">Kies eerst de onboarding.</p>';
-    var dagen = dagenVan(s);
-    if (!dagen.length) return '<p class="klein">Na deze onboarding zijn er geen dagen meer vrij. Kies een eerdere onboarding.</p>';
-    h += '<div class="label">Dag</div>' + pillen(s, 'datum', dagen.map(function (d) { return [d.datum, d.label]; }), k.datum);
-    var dag = dagen.filter(function (d) { return d.datum === k.datum; })[0];
-    if (dag) h += '<div class="label">Begintijd</div>' + pillen(s, 'tijd', dag.tijden.map(function (t) { return [t, t]; }), k.tijd);
+  function gekozenDag() {
+    return (g.mogelijkheden || []).filter(function (d) { return d.datum === keuze.datum; })[0];
+  }
+
+  function blokHtml() {
+    var h = '<div class="label">Dag</div>' + pillen('datum', (g.mogelijkheden || []).map(function (d) { return [d.datum, d.label]; }), keuze.datum);
+    var dag = gekozenDag();
+    if (dag) h += '<div class="label">Begintijd</div>' + pillen('tijd', dag.tijden.map(function (t) { return [t, t]; }), keuze.tijd);
     return h;
   }
 
-  function overzicht() {
-    var regel = function (s, naam, duur) {
-      var k = keuze[s];
-      if (!k.datum || !k.tijd || nodig().indexOf(s) === -1) return '';
-      var dag = ((g.mogelijkheden || {})[s] || []).filter(function (d) { return d.datum === k.datum; })[0];
-      var eind = (function () { var m = Number(k.tijd.slice(0, 2)) * 60 + Number(k.tijd.slice(3)) + duur; return (m < 600 ? '0' : '') + Math.floor(m / 60) + ':' + (m % 60 < 10 ? '0' : '') + m % 60; })();
-      return naam + ' – ' + (dag ? dag.label : k.datum) + ', ' + k.tijd + '–' + eind;
-    };
-    return [regel('onboarding', 'Onboarding (online)', 60), regel('training', 'Training', 180)].filter(Boolean);
+  function eindTijd(t) {
+    var m = Number(t.slice(0, 2)) * 60 + Number(t.slice(3)) + (g.duur || 180);
+    return (m < 600 ? '0' : '') + Math.floor(m / 60) + ':' + (m % 60 < 10 ? '0' : '') + m % 60;
   }
 
   function teken() {
-    nodig().forEach(function (s) { $('blok-' + s).innerHTML = blokHtml(s); });
-    var o = overzicht();
-    $('plan-overzicht').innerHTML = o.length ? '<h2>Je keuze</h2>' + lijstHtml(o) : '';
-    $('plan-overzicht').hidden = !o.length;
-    var klaar = compleet();
+    $('blok-sessie').innerHTML = blokHtml();
+    var dag = gekozenDag();
+    var klaar = !!(dag && keuze.tijd);
+    $('plan-overzicht').innerHTML = klaar ? '<h2>Je keuze</h2>' + lijstHtml(['Onboarding & training (op locatie) – ' + dag.label + ', ' +
+      keuze.tijd + '–' + eindTijd(keuze.tijd)]) : '';
+    $('plan-overzicht').hidden = !klaar;
     $('plan-bevestig').classList.toggle('klaar', klaar);
     if (klaar) $('plan-fout').hidden = true;
   }
 
   function toonPagina() {
     var merk = g.merk || {};
-    soort = g.soort || 'beide';
-    var titel = soort === 'onboarding' ? 'Plan je onboarding' : soort === 'training' ? 'Plan je training' : 'Plan je onboarding en training';
-    var uitleg = soort === 'onboarding' ? 'Hoi ' + esc(g.voornaam || '') + ', kies een nieuw moment voor je onboarding (1 uur). Die doen we ' +
-      'online via Google Meet; je krijgt de link in de agenda-uitnodiging.' :
-      soort === 'training' ? 'Hoi ' + esc(g.voornaam || '') + ', kies een nieuw moment voor je training (3 uur) op je locatie: ' +
-      esc(g.adres) + '.' :
-      'Hoi ' + esc(g.voornaam || '') + ', de onboarding (1 uur) doen we online via Google Meet; je krijgt de link in de ' +
-      'agenda-uitnodiging. De training (3 uur) is op je locatie: ' + esc(g.adres) + '.';
-    var nr = function (n) { return soort === 'beide' ? n + '. ' : ''; };
-    var blokken = {
-      onboarding: '<section class="kaart"><h2>' + nr(1) + 'Onboarding (online, 1 uur)</h2><p class="klein">' +
-        (soort === 'onboarding' ? 'Kies een dag vóór je training en een begintijd.' : 'Kies een dag en een begintijd.') + '</p>' +
-        '<div id="blok-onboarding"></div></section>',
-      training: '<section class="kaart"><h2>' + nr(2) + 'Training (op locatie, 3 uur)</h2><p class="klein">Kies een dag na je onboarding ' +
-        'en een begintijd.</p><div id="blok-training"></div></section>'
-    };
+    var wie = g.trainer ? esc(g.trainer) + ', onze kitchen trainer,' : 'Onze kitchen trainer';
     zet('<div class="merk-blok">' + (merk.logo ? '<img src="merken/' + esc(merk.logo) + '" alt="' + esc(merk.naam) + '">' : '') +
-      '<div><h1>' + esc(titel) + '</h1></div></div><p>' + uitleg + '</p>' +
-      (soort !== 'beide' && (g.vast || []).length ? '<section class="kaart"><h2>Staat al gepland</h2>' + lijstHtml(g.vast) + '</section>' : '') +
-      nodig().map(function (s) { return blokken[s]; }).join('') +
+      '<div><h1>Plan je onboarding en training</h1></div></div>' +
+      '<p>Hoi ' + esc(g.voornaam || '') + ', ' + wie + ' komt bij je langs op ' + esc(g.adres) + '. In één bezoek van 3 uur doen ' +
+      'we de onboarding (± 1 uur) en de training in je keuken (± 2 uur). Meteen een mooie kennismaking.</p>' +
+      '<section class="kaart"><h2>Onboarding en training (op locatie, 3 uur)</h2><p class="klein">Kies een dag en een begintijd. ' +
+      'We plannen overdag, zodat we klaar zijn ruim voordat je avondservice begint.</p><div id="blok-sessie"></div></section>' +
       '<p class="klein">Je kunt kiezen van ' + esc(g.vanaf) + ' tot en met ' + esc(g.tot) + '.</p>' +
       '<section class="kaart" id="plan-overzicht" hidden></section>' +
       '<div id="plan-fout" class="melding-blok mb-let" hidden></div>' +
@@ -148,9 +118,9 @@ window.VBPlanner = (function () {
   }
 
   function bevestig(knop) {
-    if (!compleet()) {
+    if (!keuze.datum || !keuze.tijd) {
       var f = $('plan-fout');
-      f.textContent = 'Kies een dag en tijd voor de ' + nodig().filter(function (s) { return !keuze[s].tijd; })[0] + '.';
+      f.textContent = 'Kies een dag en een begintijd.';
       f.hidden = false;
       f.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -161,11 +131,7 @@ window.VBPlanner = (function () {
     api('plan_bevestig', { keuze: keuze }).then(function (r) {
       if (r.status === 'gepland') return toonGepland(r.gepland, true, r.email);
       knop.disabled = false; knop.textContent = oud;
-      if (r.bezet) { // tijd net bezet: opnieuw laden met de actuele vrije tijden
-        keuze[r.bezet] = {};
-        if (r.bezet === 'onboarding') keuze.training = {};
-        return laad(r.fout);
-      }
+      if (r.bezet) { keuze = {}; return laad(r.fout); } // tijd net bezet: opnieuw laden met de actuele vrije tijden
       var f = $('plan-fout');
       f.textContent = r.fout || 'Er ging iets mis.';
       f.hidden = false;
@@ -174,11 +140,10 @@ window.VBPlanner = (function () {
 
   function toonGepland(lijst, net, email) {
     if (net) {
-      bericht('Gepland!', lijstHtml(lijst) + '<p>Je krijgt van Google Agenda ' + (soort === 'beide' ? 'voor beide afspraken een uitnodiging' :
-        'een uitnodiging') + (email ? ' op ' + esc(email) : '') + (soort === 'training' ? '.' : '; bij de onboarding staat de Meet-link.') +
-        ' Iets wijzigen? Neem contact op met Dimitri.</p>');
+      bericht('Gepland!', lijstHtml(lijst) + '<p>Je krijgt van Google Agenda een uitnodiging' + (email ? ' op ' + esc(email) : '') +
+        '. Iets wijzigen? Neem contact op met Dimitri.</p>');
     } else {
-      bericht('Je afspraken staan gepland', lijstHtml(lijst) + '<p>Iets wijzigen? Neem contact op met Dimitri.</p>');
+      bericht('Je afspraak staat gepland', lijstHtml(lijst) + '<p>Iets wijzigen? Neem contact op met Dimitri.</p>');
     }
   }
 
@@ -189,22 +154,17 @@ window.VBPlanner = (function () {
     setTimeout(function () { m.className = ''; }, 6000);
   }
 
-  /** Na opnieuw laden: alleen keuzes houden die nog vrij zijn. */
+  /** Na opnieuw laden: alleen een keuze houden die nog vrij is. */
   function houdGeldigeKeuze() {
-    ['onboarding', 'training'].forEach(function (s) {
-      var k = keuze[s];
-      var dag = (g.mogelijkheden[s] || []).filter(function (d) { return d.datum === k.datum; })[0];
-      if (!dag) keuze[s] = {};
-      else if (k.tijd && dag.tijden.indexOf(k.tijd) === -1) k.tijd = '';
-    });
-    if (soort === 'beide' && keuze.training.datum && keuze.training.datum <= (keuze.onboarding.datum || '')) keuze.training = {};
+    var dag = gekozenDag();
+    if (!dag) keuze = {};
+    else if (keuze.tijd && dag.tijden.indexOf(keuze.tijd) === -1) keuze.tijd = '';
   }
 
   function laad(melding) {
     return api('plan_start', {}, true).then(function (r) {
       g = r;
       if (r.status === 'open') {
-        soort = r.soort || 'beide';
         houdGeldigeKeuze();
         toonPagina();
         if (melding) { var f = $('plan-fout'); f.textContent = melding; f.hidden = false; f.scrollIntoView({ block: 'center' }); }
@@ -223,12 +183,9 @@ window.VBPlanner = (function () {
     $('inhoud').addEventListener('click', function (e) {
       var b = e.target.closest('.pillen button');
       if (b) {
-        var groep = b.closest('.pillen');
-        var s = groep.getAttribute('data-soort');
-        var wat = groep.getAttribute('data-wat');
-        keuze[s][wat] = b.getAttribute('data-waarde');
-        if (wat === 'datum') keuze[s].tijd = '';
-        if (soort === 'beide' && s === 'onboarding' && keuze.training.datum && keuze.training.datum <= keuze.onboarding.datum) keuze.training = {};
+        var wat = b.closest('.pillen').getAttribute('data-wat');
+        keuze[wat] = b.getAttribute('data-waarde');
+        if (wat === 'datum') keuze.tijd = '';
         teken();
         return;
       }
