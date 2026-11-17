@@ -138,7 +138,6 @@
       'adres van de locatie (waar de keuken is), telefoonnummer en mobiel nummer van de contactpersoon daar',
       'bezorg- en afhaaltijden per dag (op vrijdag, zaterdag, zondag en minimaal 2 andere dagen in ieder geval open ' +
         minimumTekst() + ')',
-      'hoe de zaak bestellingen ontvangt (koppeling: T-Connect, terminal, POS-API of anders)',
       'gewenst bezorggebied (postcodes)'
     ];
   }
