@@ -132,6 +132,7 @@
   function nodig() {
     return [
       'KvK-nummer en BTW-nummer',
+      'IBAN en naam van de rekeninghouder (voor de uitbetaling van je weekafrekening)',
       'officiële bedrijfsnaam en vestigingsplaats (zoals bij de KvK)',
       'e-mailadres voor facturen en voor communicatie',
       'adres van de locatie (waar de keuken is), telefoonnummer en mobiel nummer van de contactpersoon daar',
